@@ -116,6 +116,18 @@ class Enrollment(models.Model):
     #        return False
 
 
+class Question(models.Model):
+    lesson = models.ForeignKey(Lesson,on_delete=models.CASCADE)
+    quesion = models.TextField()
+    question_grade = models.FloatField()
+
+
+class Choice(models.Model):
+    question = models.ForeignKey(Question,on_delete=models.CASCADE)
+    text = models.TextField()
+    is_correct = models.BooleanField()
+
+
 #  <HINT> Create a Choice Model with:
     # Used to persist choice content for a question
     # One-To-Many (or Many-To-Many if you want to reuse choices) relationship with Question
@@ -128,7 +140,11 @@ class Enrollment(models.Model):
 # One enrollment could have multiple submission
 # One submission could have multiple choices
 # One choice could belong to multiple submissions
-#class Submission(models.Model):
-#    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
-#    choices = models.ManyToManyField(Choice)
-#    Other fields and methods you would like to design
+
+
+
+
+class Submission(models.Model):
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+    choices = models.ManyToManyField(Choice)
+    #Other fields and methods you would like to design

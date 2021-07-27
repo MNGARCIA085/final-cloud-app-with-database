@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 # <HINT> Import any new Models here
-from .models import Course, Enrollment
+from .models import Course, Enrollment,Question,Choice,Lesson,Submission
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -103,6 +103,50 @@ def enroll(request, course_id):
     return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
 
 
+############
+from django.urls import reverse
+
+
+
+
+
+#
+def submit(request, course_id):
+    user = request.user
+    course = Course.objects.get(pk=course_id)
+    e = Enrollment.objects.get(user=user, course=course)
+    """
+    Submission.objects.create(enrollment=e)
+    # choices
+    choicesSelected = request.POST()
+    #for c in choicesSelected:
+    choices = choicesSelected
+    """
+    submitted_anwsers = []
+    for key in request.POST:
+        if key.startswith('choice'):
+            value = request.POST[key]
+            choice_id = int(value)
+            submitted_anwsers.append(choice_id)
+    #
+    s = Submission.objects(enrollment=e,choices=submitted_anwsers)
+    s.save()
+    #
+    return redirect(reverse('show_exam_result', kwargs={"s_id": s.id}))
+
+
+
+def extract_answers(request):
+    submitted_anwsers = []
+    for key in request.POST:
+        if key.startswith('choice'):
+            value = request.POST[key]
+            choice_id = int(value)
+            submitted_anwsers.append(choice_id)
+    return submitted_anwsers
+
+
+
 # <HINT> Create a submit view to create an exam submission record for a course enrollment,
 # you may implement it based on following logic:
          # Get user and course object, then get the associated enrollment object created when the user enrolled the course
@@ -134,3 +178,11 @@ def enroll(request, course_id):
 
 
 
+def show_exam_result(request, course_id, submission_id):
+    course = Course.objects.get(course_id)
+    submission = Submission.objects.get(submission_id)
+    #
+    selectedChoices = submission.choices
+    for s in selectedChoices:
+        pass
+    pass
