@@ -28,3 +28,4 @@ urlpatterns = [
 
 
 
+#http://127.0.0.1:8000/onlinecourse/course/1/submission/1/result/

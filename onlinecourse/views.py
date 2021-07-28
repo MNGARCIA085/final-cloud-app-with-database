@@ -84,9 +84,17 @@ class CourseListView(generic.ListView):
         return courses
 
 
+
+
 class CourseDetailView(generic.DetailView):
     model = Course
     template_name = 'onlinecourse/course_detail_bootstrap.html'
+
+
+
+
+
+
 
 
 def enroll(request, course_id):
@@ -110,6 +118,7 @@ from django.urls import reverse
 
 
 
+
 #
 def submit(request, course_id):
     user = request.user
@@ -126,13 +135,30 @@ def submit(request, course_id):
     for key in request.POST:
         if key.startswith('choice'):
             value = request.POST[key]
+            #value = value.split(":")
+            #value = value[1]; {{question.id}}:{{choice.id}}
             choice_id = int(value)
             submitted_anwsers.append(choice_id)
+    # nota
+    grade = 0
+    aux = request.POST.getlist('q_id')
+    for a in aux:
+        q = Question.objects.get(pk=a)
+        correctAnswers = Choice.objects.filter(question_id=a,is_correct=True)
+        listaAux = []
+        for c in correctAnswers:
+            listaAux.append(int(c.id))
+        resultado=list(filter(lambda x: x in listaAux, submitted_anwsers))
+        if len(resultado)==len(listaAux):
+            grade = grade + q.question_grade
     #
-    s = Submission.objects(enrollment=e,choices=submitted_anwsers)
-    s.save()
-    #
-    return redirect(reverse('show_exam_result', kwargs={"s_id": s.id}))
+    s = Submission.objects.create(enrollment=e,grade=grade) #,choices=submitted_anwsers)
+    s.choices.set(submitted_anwsers)
+    #s.save()
+    #return redirect(reverse('show_exam_result', kwargs={"submission_id": s.id,"course_id":course_id}))
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(course_id,s.id)))
+
+
 
 
 
@@ -179,10 +205,13 @@ def extract_answers(request):
 
 
 def show_exam_result(request, course_id, submission_id):
-    course = Course.objects.get(course_id)
-    submission = Submission.objects.get(submission_id)
+    course = Course.objects.get(pk=course_id)
+    submission = Submission.objects.get(pk=submission_id)
     #
-    selectedChoices = submission.choices
-    for s in selectedChoices:
-        pass
-    pass
+    grade = submission.grade
+    selectedChoices = submission.choices.values_list('pk', flat=True)
+    correctChoices = Choice.objects.filter(is_correct=True).values_list('pk',flat=True)
+    return render(request,'onlinecourse/exam_result_bootstrap.html',locals())
+
+    
+
